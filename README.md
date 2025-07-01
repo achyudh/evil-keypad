@@ -205,6 +205,7 @@ You can customize Evil Keypad via `M-x customize-group RET evil-keypad RET`. Her
 | `evil-keypad-C-h-trigger`                | `h`     | First key to represent the `C-h` prefix                             |
 | `evil-keypad-universal-argument-trigger` | `u`     | Key to emulate universal argument (`C-u`)                           |
 | `evil-keypad-negative-argument-trigger`  | `-`     | Key to emulate negative argument (`M--`)                            |
+| `evil-keypad-quit-key`                   | `ESC`   | Key to quit the keypad                                              |
 
 ## License
 
