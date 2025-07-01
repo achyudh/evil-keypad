@@ -143,7 +143,7 @@ Used after first key is entered."
   :type 'character :group 'evil-keypad)
 
 ;;;###autoload
-(defcustom evil-keypad-quit-key (kbd "C-g")
+(defcustom evil-keypad-quit-key (kbd "ESC")
   "Key to quit the keypad input state."
   :type 'string :group 'evil-keypad)
 
@@ -418,6 +418,7 @@ Returns t to exit."
   "Create and return the keypad state keymap."
   (let ((map (make-sparse-keymap)))
     (define-key map evil-keypad-quit-key #'evil-keypad-quit)
+    (define-key map (kbd "C-g") #'evil-keypad-quit)
     (define-key map (kbd "<backspace>") #'evil-keypad-undo)
     (define-key map (kbd "DEL") #'evil-keypad-undo)
     map))
