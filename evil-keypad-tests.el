@@ -518,6 +518,58 @@ Returns (FORMATTED-SEQ . CONTROL-INDUCING-P)."
         (should (= evil-keypad-test--executed-prefix-arg 5)))
     (advice-remove 'evil-keypad--execute #'evil-keypad-test--track-execution)))
 
+(defun evil-keypad-test--simulate-input (key-events-list)
+  "Simulate typing KEY-EVENTS-LIST into evil-keypad."
+  (evil-keypad--cancel-display-timer-and-clear)
+  (setq evil-keypad--keys nil
+        evil-keypad--pending-modifier nil
+        evil-keypad--session-initial-prefix-arg current-prefix-arg
+        evil-keypad--session-active-prefix-arg evil-keypad--session-initial-prefix-arg
+        evil-keypad--control-inducing-sequence-p nil)
+
+  (dolist (event key-events-list)
+    (evil-keypad--handle-input event)))
+
+(ert-deftest evil-keypad-test-prefix-help-command ()
+  "Test the prefix-help-command functionality."
+  (let ((help-command-called-with-keymap nil))
+    (fset 'my-test-help-command
+          (lambda (keymap)
+            (setq help-command-called-with-keymap keymap)))
+    (setq evil-keypad-prefix-help-command 'my-test-help-command)
+
+    (unwind-protect
+        (progn
+          ;; Test that help is called for an unbound prefix
+          (evil-keypad-test--simulate-input (list ?x help-char))
+          (should (keymapp help-command-called-with-keymap))
+          (should (eq (lookup-key help-command-called-with-keymap (kbd "C-f")) 'find-file))
+
+          ;; Test that help is NOT called for a bound prefix
+          (setq help-command-called-with-keymap nil)
+          (define-key ctl-x-map (vector help-char) 'test-command)
+          (evil-keypad-test--simulate-input (list ?x help-char))
+          (should (null help-command-called-with-keymap)))
+      (fmakunbound 'my-test-help-command)
+      (define-key ctl-x-map (vector help-char) nil))))
+
+(ert-deftest evil-keypad-test-prefix-help-command-nil ()
+  "Test that `help-char` dings when `evil-keypad-prefix-help-command` is nil."
+  (let ((help-command-called-with-keymap nil))
+    (fset 'my-test-help-command
+          (lambda (keymap)
+            (setq help-command-called-with-keymap keymap)))
+    (setq evil-keypad-prefix-help-command nil)
+
+    (unwind-protect
+        (progn
+          ;; Simulate input that would trigger help
+          (evil-keypad-test--simulate-input (list ?x help-char))
+
+          ;; Verify that the help command was NOT called
+          (should (null help-command-called-with-keymap)))
+      (fmakunbound 'my-test-help-command))))
+
 (provide 'evil-keypad-tests)
 
 ;;; evil-keypad-tests.el ends here

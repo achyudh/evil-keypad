@@ -106,8 +106,9 @@ You have two options for activating the keypad:
     * These can be combined: `u u` = `C-u C-u`, `- 5` = `M-- 5`, etc.
 4.  Once a complete command is recognized, it executes, and the keypad automatically exits.
 5.  If the sequence is unbound, an `<sequence> is undefined` message appears, and the keypad exits.
-6.  Press `ESC` anytime to cancel and exit the keypad.
-7.  Press `Backspace` or `DEL` to undo the last keypress, pending modifier, or prefix argument.
+6.  Press `C-g` anytime to cancel and exit the keypad.
+7.  Press `C-h` (or `help-char`) to get help for the current prefix. If `evil-keypad-prefix-help-command` is set, it will be called with the current keymap; otherwise, Emacs will ding.
+8.  Press `Backspace` or `DEL` to undo the last keypress, pending modifier, or prefix argument.
 
 ### Key Translation Logic
 
@@ -189,6 +190,28 @@ Evil Keypad integrates deeply with `which-key` to provide interactive command di
 * The display updates automatically as you type modifiers or keys.
 * *Note:* `which-key` is bundled with Emacs starting from version 30. For Emacs 29 and earlier, ensure the `which-key` package is installed (e.g., from ELPA/NonGNU ELPA) and `which-key-mode` is enabled.
 
+## Customizing Help Behavior
+
+The `evil-keypad-prefix-help-command` variable allows you to customize the behavior when `help-char` (typically `C-h`) is pressed after a prefix in Evil Keypad. If this variable is set to a function, that function will be called with one argument: the keymap for the current prefix. If the variable is `nil` (the default), Emacs will simply ding.
+
+Here are some examples of functions you can assign to `evil-keypad-prefix-help-command`:
+
+**1. Using `describe-keymap`:**
+
+This will make `C-h` within Evil Keypad show a `*Help*` buffer describing the keymap of the current prefix.
+
+```elisp
+(setq evil-keypad-prefix-help-command #'describe-keymap)
+```
+
+**2. Using `embark-bindings-in-keymap`:**
+
+If you have `embark` installed, this will allow you to interactively explore the bindings in the current prefix's keymap using `embark`'s powerful `completing-read` interface.
+
+```elisp
+(setq evil-keypad-prefix-help-command #'embark-bindings-in-keymap)
+```
+
 ## Customization
 
 You can customize Evil Keypad via `M-x customize-group RET evil-keypad RET`. Here are the key variables:
@@ -205,6 +228,8 @@ You can customize Evil Keypad via `M-x customize-group RET evil-keypad RET`. Her
 | `evil-keypad-C-h-trigger`                | `h`     | First key to represent the `C-h` prefix                             |
 | `evil-keypad-universal-argument-trigger` | `u`     | Key to emulate universal argument (`C-u`)                           |
 | `evil-keypad-negative-argument-trigger`  | `-`     | Key to emulate negative argument (`M--`)                            |
+| `evil-keypad-prefix-help-command`        | `nil`   | Command to run when `help-char` is pressed after a prefix           |
+| `evil-keypad-quit-key`                   | `C-g`   | Key to quit the keypad input state                                  |
 
 ## License
 

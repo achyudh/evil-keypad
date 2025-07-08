@@ -147,6 +147,15 @@ Used after first key is entered."
   "Key to quit the keypad input state."
   :type 'string :group 'evil-keypad)
 
+;;;###autoload
+(defcustom evil-keypad-prefix-help-command nil
+  "Command to run when `help-char` is pressed after a prefix.
+This command is used only when there is no actual binding for `help-char`
+after that prefix. The function is called with one argument: the keymap for
+the current prefix."
+  :type '(function :tag "Help function")
+  :group 'evil-keypad)
+
 ;;----------------------------------------
 ;; Global Trigger Activation
 ;;----------------------------------------
@@ -418,6 +427,7 @@ Returns t to exit."
   "Create and return the keypad state keymap."
   (let ((map (make-sparse-keymap)))
     (define-key map evil-keypad-quit-key #'evil-keypad-quit)
+
     (define-key map (kbd "<backspace>") #'evil-keypad-undo)
     (define-key map (kbd "DEL") #'evil-keypad-undo)
     map))
@@ -430,6 +440,12 @@ Returns t to exit."
 FORMAT-STRING is the format string passed to `format`.
 ARGS are the arguments for the format string."
   (message "Keypad: %s" (apply #'format format-string args)))
+
+(defun evil-keypad--get-current-keymap ()
+  "Get the keymap for the current key sequence."
+  (let* ((seq-str (evil-keypad--format-sequence evil-keypad--keys))
+         (seq-vec (if (string-empty-p seq-str) nil (kbd seq-str))))
+    (if seq-vec (key-binding seq-vec t) (current-global-map))))
 
 (defun evil-keypad--display-pending-state ()
   "Display the current prefix arg, sequence, and pending modifier.  Returns nil."
@@ -465,6 +481,18 @@ BINDING is the command to execute with the current prefix argument."
   (evil-keypad--cancel-display-timer-and-clear)
   (evil-keypad--execute binding)
   t)
+
+(defun evil-keypad--handle-help-request (keymap)
+  "Handle a help request for the given KEYMAP."
+  (if (and evil-keypad-prefix-help-command
+           (fboundp evil-keypad-prefix-help-command))
+      (progn
+        (evil-keypad--cancel-display-timer-and-clear)
+        (funcall evil-keypad-prefix-help-command keymap)
+        (evil-keypad--quit)
+        t)
+    (ding)
+    nil))
 
 (defun evil-keypad--handle-unbound-sequence (original-seq-str)
   "Handle an unbound ORIGINAL-SEQ-STR, attempting fallback.
@@ -530,6 +558,8 @@ Returns result of `evil-keypad--try-execute` (t to exit, nil to continue)."
               (setq add-implicit-C-c-prefix-p t)
               (setq evil-keypad--control-inducing-sequence-p nil) 'literal)))
            (evil-keypad--control-inducing-sequence-p 'control)
+           ((and (characterp event) (< event 32)) ; Check for control character
+            'literal)
            (t 'literal))))
     (setq evil-keypad--keys
           (if add-implicit-C-c-prefix-p
@@ -604,6 +634,11 @@ EVENT is the key event pressed.  MOD-FROM-PENDING is the pending modifier."
         (call-interactively cmd)
       (let ((is-initial-phase (and (null evil-keypad--keys) (null evil-keypad--pending-modifier))))
         (cond
+         ((and (eq event help-char)
+               (not (lookup-key (evil-keypad--get-current-keymap) (vector event) t)))
+          (if (keymapp (evil-keypad--get-current-keymap))
+              (evil-keypad--handle-help-request (evil-keypad--get-current-keymap))
+            (progn (ding) nil)))
          ((and is-initial-phase
                (eq event evil-keypad-universal-argument-trigger))
           (evil-keypad--handle-universal-argument-trigger)
