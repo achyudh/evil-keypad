@@ -1,0 +1,36 @@
+name: Emacs Lisp CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs: ["30.1"] # Test against minimum supported Emacs version
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Emacs
+      uses: purcell/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs }}
+
+    - name: Load file
+      uses: leotaku/elisp-check@master
+      with:
+        file: evil-keypad.el
+        check: load-file
+
+    - name: Byte-compile file
+      uses: leotaku/elisp-check@master
+      with:
+        file: evil-keypad.el
+        check: byte-compile
+
+    - name: Run ERT tests
+      uses: leotaku/elisp-check@master
+      with:
+        file: evil-keypad-tests.el
+        check: ert
