@@ -271,19 +271,16 @@ If BINDING is non‑nil, pass it to that function; otherwise call with no args."
 
 (defun evil-keypad--make-initial-display-map ()
   "Create and return a keymap for initial which-key display."
-  (let ((map (make-sparse-keymap "Evil Keypad Initial Actions")))
-    (define-key map (vector evil-keypad-C-x-trigger) "C-x-prefix")
-    (define-key map (vector evil-keypad-C-c-trigger) "C-c-prefix")
-    (define-key map (vector evil-keypad-C-h-trigger) "C-h-prefix")
-    (define-key map (vector evil-keypad-M-trigger)   "M-trigger")
-    (define-key map (vector evil-keypad-C-M-trigger) "C-M-trigger")
-    (define-key map (vector evil-keypad-universal-argument-trigger) "universal-argument")
-    (define-key map (vector evil-keypad-negative-argument-trigger) "negative-argument")
+  (let ((map (copy-keymap mode-specific-map)))
+    (define-key map (vector evil-keypad-C-x-trigger) "keypad/C-x-prefix")
+    (define-key map (vector evil-keypad-C-c-trigger) "keypad/C-c-prefix")
+    (define-key map (vector evil-keypad-C-h-trigger) "keypad/C-h-prefix")
+    (define-key map (vector evil-keypad-M-trigger)   "keypad/M-trigger")
+    (define-key map (vector evil-keypad-C-M-trigger) "keypad/C-M-trigger")
+    (define-key map (vector evil-keypad-universal-argument-trigger) "keypad/universal-arg")
+    (define-key map (vector evil-keypad-negative-argument-trigger) "keypad/negative-arg")
     (define-key map evil-keypad-quit-key #'evil-keypad-quit)
     map))
-
-(defvar evil-keypad--initial-display-map (evil-keypad--make-initial-display-map)
-  "Keymap pre-calculated for initial which-key display when keypad starts.")
 
 (defun evil-keypad--trigger-which-key-display (&optional target-keymap)
   "Show relevant bindings using which-key.
@@ -296,7 +293,7 @@ the initial evil-keypad trigger keys."
         (if (null evil-keypad--keys)
             (if evil-keypad--session-active-prefix-arg
                 (funcall evil-keypad--clear-display-function)
-              (which-key--create-buffer-and-show nil evil-keypad--initial-display-map nil nil))
+              (which-key--create-buffer-and-show nil (evil-keypad--make-initial-display-map) nil "C-c"))
           (funcall evil-keypad--clear-display-function)))
     (error (message "Error showing which-key: %S" err))))
 

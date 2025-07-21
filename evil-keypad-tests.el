@@ -460,7 +460,7 @@ Returns (FORMATTED-SEQ . CONTROL-INDUCING-P)."
            (evil-keypad-test--reset-which-key-mocks)
            (evil-keypad--trigger-which-key-display)
            (should evil-keypad-test--which-key-called)
-           (should (eq evil-keypad-test--which-key-keymap-arg evil-keypad--initial-display-map))
+           (should (keymapp evil-keypad-test--which-key-keymap-arg))
 
            ;; Test display with keymap
            (evil-keypad-test--reset-which-key-mocks)
